@@ -1,0 +1,103 @@
+/**
+ * Interactive XP panel.
+ *
+ * Owns local UI state (the selected activity path) and, on every change,
+ * recomputes the filtered subset and updates TWO linked views in place:
+ *   1. the SVG line chart (rebuilt from the filtered cumulative series),
+ *   2. the last-10 transaction ledger.
+ */
+
+import { el } from './dom.js';
+import { buildXpLineChart } from './charts.js';
+import { formatXp, formatDay, cumulativeSeries, activityName } from '../utils.js';
+
+/**
+ * @param {{ xpTransactions: Array, activities: Array<string> }} data
+ * @returns {HTMLElement}
+ */
+export function renderXpSection(data) {
+  const xpTx = data.xpTransactions || [];
+  const activities = data.activities || [];
+
+  const panel = el('section', { class: 'panel xp', 'aria-label': 'XP over time' });
+
+  // --- Header: title + dynamic activity filter ---
+  const head = el('div', { class: 'panel__head' });
+  head.append(el('h2', { class: 'panel__title', text: 'XP over time' }));
+
+  const select = el('select', {
+    class: 'select',
+    'aria-label': 'Filter XP by activity',
+  });
+  select.append(el('option', { value: 'all', text: 'All activity' }));
+  for (const a of activities) select.append(el('option', { value: a, text: a }));
+  head.append(select);
+  panel.append(head);
+
+  // --- Body: chart + ledger ---
+  const body = el('div', { class: 'xp__body' });
+  const chartWrap = el('div', { class: 'xp__chart' });
+  const ledgerWrap = el('div', { class: 'xp__ledger' });
+  body.append(chartWrap, ledgerWrap);
+  panel.append(body);
+
+  /** Recompute the chart + ledger for the chosen activity. */
+  function apply(selected) {
+    const filtered =
+      selected === 'all' ? xpTx : xpTx.filter((t) => activityName(t.path) === selected);
+
+    // Recompute the chronological running total from the filtered subset and
+    // rebuild the chart (its scales/viewBox adapt to the new data volume).
+    chartWrap.replaceChildren(buildXpLineChart(cumulativeSeries(filtered)));
+    ledgerWrap.replaceChildren(buildLedger(filtered));
+  }
+
+  select.addEventListener('change', () => apply(select.value));
+  apply('all');
+
+  return panel;
+}
+
+/* ------------------------------------------------------------------------ *
+ * Recent activity ledger (last 10, newest first)
+ * ------------------------------------------------------------------------ */
+
+function buildLedger(transactions) {
+  const recent = transactions
+    .slice()
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 10);
+
+  const wrap = el('div', { class: 'ledger' });
+  wrap.append(el('h3', { class: 'ledger__title', text: 'Recent activity' }));
+
+  const scroll = el('div', { class: 'ledger__scroll' });
+  const table = el('table', { class: 'ledger__table' });
+
+  const thead = el('thead');
+  const headRow = el('tr');
+  ['Amount', 'Date', 'Project'].forEach((h) => headRow.append(el('th', { text: h })));
+  thead.append(headRow);
+  table.append(thead);
+
+  const tbody = el('tbody');
+  if (!recent.length) {
+    const tr = el('tr');
+    tr.append(el('td', { class: 'ledger__empty', text: 'No transactions', attrs: { colspan: '3' } }));
+    tbody.append(tr);
+  } else {
+    for (const t of recent) {
+      const tr = el('tr');
+      tr.append(
+        el('td', { class: 'ledger__amount', text: '+' + formatXp(Number(t.amount) || 0) }),
+        el('td', { class: 'ledger__date', text: formatDay(new Date(t.createdAt)) }),
+        el('td', { class: 'ledger__path', text: t.path || '—', title: t.path || '' })
+      );
+      tbody.append(tr);
+    }
+  }
+  table.append(tbody);
+  scroll.append(table);
+  wrap.append(scroll);
+  return wrap;
+}
