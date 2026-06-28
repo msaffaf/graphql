@@ -7,7 +7,6 @@
 import { el } from './dom.js';
 import {
   renderProfileCard,
-  renderMetrics,
   renderProjectsPanel,
   renderAuditPanel,
 } from './sections.js';
@@ -120,7 +119,6 @@ export function renderDashboard({ data, loading, error, onLogout, onRetry }) {
 
   // Content
   root.append(renderProfileCard(data.profile));
-  root.append(renderMetrics(data));
   root.append(renderXpSection(data));
   root.append(
     el('div', { class: 'grid-2' }, [renderProjectsPanel(data), renderAuditPanel(data)])

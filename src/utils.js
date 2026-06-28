@@ -39,39 +39,13 @@ export function formatRatio(ratio) {
 export function activityName(path) {
   const segs = (path || '').split('/').filter(Boolean);
   if (!segs.length) return '';
+  const hasModule = segs.some((s) => s.includes('bh-module'));
+  const piscine = segs.find((s) => s.includes('piscine'));
+  if (hasModule && piscine) return piscine;
   if (segs[0] === 'bahrain') return segs[1] || '';
   return segs[0];
 }
 
-/** Last path segment — used as a fallback project name. */
-export function lastSegment(path) {
-  if (!path) return '';
-  const segs = path.split('/').filter(Boolean);
-  return segs[segs.length - 1] || '';
-}
-
-/** Best-effort project name: nested object name first, else path tail. */
-export function projectName(row) {
-  return (row && row.object && row.object.name) || lastSegment(row && row.path) || 'Unknown';
-}
-
-/**
- * Safely read the `attrs` blob, whether it arrives as a parsed object or a
- * JSON string. Always returns an object so `attrs.cpr` style access is safe.
- */
-// export function safeAttrs(user) {
-//   const a = user && user.attrs;
-//   if (!a) return {};
-//   if (typeof a === 'object') return a;
-//   if (typeof a === 'string') {
-//     try {
-//       return JSON.parse(a) || {};
-//     } catch {
-//       return {};
-//     }
-//   }
-//   return {};
-// }
 
 /**
  * Sort transactions chronologically and produce a running cumulative series.

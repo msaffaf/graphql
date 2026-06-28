@@ -33,30 +33,6 @@ export function renderProfileCard(profile) {
   return panel;
 }
 
-/* ---- Three core summary metric cards ----------------------------------- */
-
-export function renderMetrics(data) {
-  const row = el('section', { class: 'metrics', 'aria-label': 'Summary metrics' });
-  row.append(
-    metricCard('Total XP', formatXp(data.totalXp), `${data.xpTransactions.length} transactions`),
-    metricCard('Projects passed', String(data.totalPassed), `of ${data.totalAttempted} attempted`),
-    metricCard(
-      'Audit ratio',
-      formatRatio(data.auditRatio),
-      `${formatXp(data.auditUp)} up · ${formatXp(data.auditDown)} down`
-    )
-  );
-  return row;
-}
-
-function metricCard(label, value, sub) {
-  return el('article', { class: 'card metric' }, [
-    el('p', { class: 'metric__label', text: label }),
-    el('p', { class: 'metric__value', text: value }),
-    el('p', { class: 'metric__sub', text: sub }),
-  ]);
-}
-
 /* ---- Attempted projects: two badge counters + scrollable list ----------- */
 
 export function renderProjectsPanel(data) {
@@ -81,7 +57,7 @@ export function renderProjectsPanel(data) {
     for (const p of data.attemptedProjects) {
       list.append(
         el('li', { class: 'projects__item' }, [
-          el('span', { class: 'projects__name', text: p.name, title: p.path || '' }),
+          el('span', { class: 'projects__name', text: (p.object && p.object.name) || '—', title: p.path || '' }),
           statusBadge(p.status),
         ])
       );
@@ -123,6 +99,22 @@ export function renderAuditPanel(data) {
     ])
   );
 
+  // Audit-ratio breakdown — moved here from the removed metrics card (#1).
+  panel.append(
+    el('ul', { class: 'audit__list' }, [
+      auditRow('Audits done (up)', formatXp(data.auditUp)),
+      auditRow('Audits received (down)', formatXp(data.auditDown)),
+      auditRow('Ratio', formatRatio(data.auditRatio)),
+    ])
+  );
+
   panel.append(el('div', { class: 'audit__chart' }, [buildAuditChart({ up: data.auditUp, down: data.auditDown })]));
   return panel;
+}
+
+function auditRow(label, value) {
+  return el('li', { class: 'audit__row' }, [
+    el('span', { class: 'audit__row-label', text: label }),
+    el('span', { class: 'audit__row-value', text: value }),
+  ]);
 }

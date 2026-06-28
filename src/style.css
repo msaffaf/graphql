@@ -369,47 +369,6 @@ body {
 }
 
 /* =========================================================================
-   Summary metric cards
-   ========================================================================= */
-.metrics {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-bottom: 16px;
-}
-.metric {
-  padding: 18px 20px;
-  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
-}
-.metric:hover {
-  transform: translateY(-3px);
-  border-color: var(--primary-dim);
-  box-shadow: var(--shadow), 0 0 18px rgba(74, 222, 128, 0.12);
-}
-.metric__label {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-}
-.metric__value {
-  margin: 10px 0 4px;
-  font-family: var(--font-mono);
-  font-size: 28px;
-  font-weight: 700;
-  line-height: 1.1;
-  color: var(--text);
-}
-.metric__sub {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 13px;
-}
-
-/* =========================================================================
    Status badges (terminal tokens) + counters
    ========================================================================= */
 .badge {
@@ -533,6 +492,25 @@ body {
 /* =========================================================================
    XP panel — interactive
    ========================================================================= */
+.xp__total {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.xp__total-value {
+  font-family: var(--font-mono);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--primary);
+  text-shadow: 0 0 18px rgba(107, 251, 154, 0.35);
+}
+.xp__total-sub {
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  font-size: 13px;
+}
 .xp__body {
   display: grid;
   grid-template-columns: 1.5fr 1fr;
@@ -635,6 +613,38 @@ body {
   color: var(--text-muted);
   font-size: 13px;
 }
+.audit__list {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+}
+.audit__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 14px;
+}
+.audit__row + .audit__row {
+  border-top: 1px solid var(--border);
+}
+.audit__row-label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.audit__row-value {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
 .audit__chart {
   background: var(--panel-2);
   border: 1px solid var(--border);
@@ -735,6 +745,11 @@ body {
   fill: var(--c-line);
   outline: none;
   filter: drop-shadow(0 0 6px rgba(107, 251, 154, 0.7));
+}
+/* The most recent point — emphasised so it's clearly the last transaction. */
+.chart__dot--last {
+  fill: var(--c-line);
+  filter: drop-shadow(0 0 6px rgba(107, 251, 154, 0.8));
 }
 
 /* Bars (audit) */
@@ -845,9 +860,6 @@ body {
    Responsive — collapse to single column under 768px, 16px safe area
    ========================================================================= */
 @media (max-width: 900px) {
-  .metrics {
-    grid-template-columns: 1fr;
-  }
   .xp__body {
     grid-template-columns: 1fr;
   }

@@ -34,6 +34,10 @@ export function renderXpSection(data) {
   head.append(select);
   panel.append(head);
 
+  // --- XP amount for the chosen activity (#6) ---
+  const total = el('div', { class: 'xp__total' });
+  panel.append(total);
+
   // --- Body: chart + ledger ---
   const body = el('div', { class: 'xp__body' });
   const chartWrap = el('div', { class: 'xp__chart' });
@@ -41,10 +45,17 @@ export function renderXpSection(data) {
   body.append(chartWrap, ledgerWrap);
   panel.append(body);
 
-  /** Recompute the chart + ledger for the chosen activity. */
+  /** Recompute the XP figure + chart + ledger for the chosen activity. */
   function apply(selected) {
     const filtered =
       selected === 'all' ? xpTx : xpTx.filter((t) => activityName(t.path) === selected);
+
+    // XP amount for the current selection.
+    const sum = filtered.reduce((s, t) => s + (Number(t.amount) || 0), 0);
+    total.replaceChildren(
+      el('span', { class: 'xp__total-value', text: formatXp(sum) }),
+      el('span', { class: 'xp__total-sub', text: selected === 'all' ? 'all activities' : selected })
+    );
 
     // Recompute the chronological running total from the filtered subset and
     // rebuild the chart (its scales/viewBox adapt to the new data volume).

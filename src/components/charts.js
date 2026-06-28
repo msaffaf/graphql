@@ -11,7 +11,7 @@
  * hover/animation and ARIA).
  */
 
-import { formatXp, formatMonthYear } from '../utils.js';
+import { formatXp, formatMonthYear, formatDay } from '../utils.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -61,12 +61,12 @@ export function buildXpLineChart(series) {
 
   if (!series.length) return withEmpty(svg, W, H, 'No XP for this selection');
 
-  const xMin = series[0].date.getTime();
-  const xMax = series[series.length - 1].date.getTime();
-  const yMax = series[series.length - 1].cumulative || 1;
-  const xSpan = xMax - xMin || 1;
+  // Index-based X: points are evenly spaced in chronological order, so the
+  // final point is always the most recent transaction sitting at the far right.
+  const n = series.length;
+  const yMax = series[n - 1].cumulative || 1;
 
-  const xScale = (t) => m.left + ((t - xMin) / xSpan) * innerW;
+  const xAt = (i) => m.left + (n === 1 ? innerW / 2 : (i / (n - 1)) * innerW);
   const yScale = (v) => m.top + innerH - (v / yMax) * innerH;
 
   // --- Grid + Y axis labels (5 ticks) ---
@@ -88,35 +88,39 @@ export function buildXpLineChart(series) {
 
   // --- X axis labels (start, middle, end) ---
   const gx = el('g', { class: 'chart__axis-x' });
-  const idxs = [...new Set([0, Math.floor(series.length / 2), series.length - 1])];
+  const idxs = [...new Set([0, Math.floor((n - 1) / 2), n - 1])];
   idxs.forEach((idx) => {
     const p = series[idx];
     gx.appendChild(
-      el(
-        'text',
-        { x: xScale(p.date.getTime()), y: H - 14, class: 'chart__label chart__label--x' },
-        [text(formatMonthYear(p.date))]
-      )
+      el('text', { x: xAt(idx), y: H - 14, class: 'chart__label chart__label--x' }, [
+        text(formatMonthYear(p.date)),
+      ])
     );
   });
   svg.appendChild(gx);
 
   // --- Area + line paths ---
-  const linePoints = series.map((p) => `${xScale(p.date.getTime())},${yScale(p.cumulative)}`);
+  const linePoints = series.map((p, i) => `${xAt(i)},${yScale(p.cumulative)}`);
   const lineD = 'M' + linePoints.join(' L');
-  const areaD =
-    `M${xScale(xMin)},${yScale(0)} L` + linePoints.join(' L') + ` L${xScale(xMax)},${yScale(0)} Z`;
+  const areaD = `M${xAt(0)},${yScale(0)} L` + linePoints.join(' L') + ` L${xAt(n - 1)},${yScale(0)} Z`;
 
   svg.appendChild(el('path', { d: areaD, class: 'chart__area' }));
   svg.appendChild(el('path', { d: lineD, class: 'chart__line' }));
 
   // --- Interactive points with native <title> tooltips ---
   const gDots = el('g', { class: 'chart__dots' });
-  series.forEach((p) => {
-    const cx = xScale(p.date.getTime());
+  series.forEach((p, i) => {
+    const isLast = i === n - 1;
+    const cx = xAt(i);
     const cy = yScale(p.cumulative);
-    const dot = el('circle', { cx, cy, r: 3.5, class: 'chart__dot', tabindex: '0' });
-    const label = `${formatMonthYear(p.date)} · ${formatXp(p.cumulative)} total`;
+    const dot = el('circle', {
+      cx,
+      cy,
+      r: isLast ? 5 : 3.5,
+      class: isLast ? 'chart__dot chart__dot--last' : 'chart__dot',
+      tabindex: '0',
+    });
+    const label = `${formatDay(p.date)} · ${formatXp(p.cumulative)} total`;
     dot.appendChild(el('title', {}, [text(label)]));
     dot.setAttribute('aria-label', label);
     gDots.appendChild(dot);

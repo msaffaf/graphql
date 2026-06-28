@@ -8,7 +8,7 @@
 
 import { ENDPOINTS } from '../config.js';
 import { getToken, clearToken } from './auth.js';
-import { projectName, activityName } from '../utils.js';
+import { activityName } from '../utils.js';
 
 /**
  * A single unified GraphQL query covering every required structural feature:
@@ -24,7 +24,9 @@ import { projectName, activityName } from '../utils.js';
  * request the guaranteed `attrs` jsonb and extract from it defensively. If your
  * instance exposes a top-level `email` column, add it to the `user` block.
  */
-const PROFILE_QUERY = `
+
+
+const Profile_Query = `
   query ProfileDashboard {
     user {
       id
@@ -41,7 +43,7 @@ const PROFILE_QUERY = `
       path
     }
     progress(
-      where: { object: { type: { _eq: "project" } } }
+      where: { object: {type: {_eq: "project"} } }
       order_by: { createdAt: asc }
     ) {
       id
@@ -118,22 +120,7 @@ function sumAmount(transactions) {
  * Keyed on the object identity first — a retry keeps the same `object.id` even
  * if its `path` or `createdAt` differs — then falls back to path / name.
  */
-function dedupeProgress(progress) {
-  const byKey = new Map();
-  for (const p of progress) {
-    const key = (p.object && p.object.id) || p.path || projectName(p);
-    const prev = byKey.get(key);
-    if (!prev) {
-      byKey.set(key, p);
-      continue;
-    }
-    const prevGrade = Number(prev.grade) || 0;
-    const curGrade = Number(p.grade) || 0;
-    const newer = new Date(p.createdAt) > new Date(prev.createdAt);
-    if (curGrade > prevGrade || (curGrade === prevGrade && newer)) byKey.set(key, p);
-  }
-  return [...byKey.values()];
-}
+
 
 /** grade >= 1 -> PASS, graded but < 1 -> FAIL, ungraded -> IN_PROGRESS. */
 function gradeStatus(grade) {
@@ -148,13 +135,13 @@ function gradeStatus(grade) {
  * @returns {Promise<object>}
  */
 export async function fetchProfileData() {
-  const data = await gqlRequest(PROFILE_QUERY);
+  const data = await gqlRequest(Profile_Query);
 
   const user = data.user[0];
   const attrs = user.attrs;
   const transactions = Array.isArray(data.transaction) ? data.transaction : [];
-  const progress = Array.isArray(data.progress) ? data.progress : [];
-console.log(data)
+  const attemptedProjects = Array.isArray(data.progress) ? data.progress : [];
+  console.log(data)
   // --- Expanded profile (5 fields) ------
   const profile = {
     login: user.login ,
@@ -177,17 +164,10 @@ console.log(data)
   const activities = [...new Set(xpTransactions.map((t) => activityName(t.path)).filter(Boolean))].sort();
 
   // --- Attempted projects (deduped) ---------------------------------------
-  const unique = dedupeProgress(progress);
-  const attemptedProjects = unique
-    .map((p) => ({
-      name: projectName(p),
-      status: gradeStatus(p.grade),
-      grade: p.grade,
-      path: p.path,
-      createdAt: p.createdAt,
-    }))
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
+  
+  attemptedProjects.forEach((p) => {
+    p.status = gradeStatus(p.grade);
+  });
   const totalAttempted = attemptedProjects.length;
   const totalPassed = attemptedProjects.filter((p) => p.status === 'PASS').length;
 
