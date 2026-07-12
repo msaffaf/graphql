@@ -577,7 +577,7 @@ body {
   color: var(--text-muted);
   white-space: nowrap;
 }
-.ledger__path {
+.ledger__name {
   font-size: 12px;
   color: var(--text-faint);
   max-width: 160px;

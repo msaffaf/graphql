@@ -18,7 +18,6 @@ import { formatXp, formatDay, cumulativeSeries, activityName } from '../utils.js
 export function renderXpSection(data) {
   const xpTx = data.xpTransactions || [];
   const activities = data.activities || [];
-
   const panel = el('section', { class: 'panel xp', 'aria-label': 'XP over time' });
 
   // --- Header: title + dynamic activity filter ---
@@ -48,8 +47,7 @@ export function renderXpSection(data) {
   /** Recompute the XP figure + chart + ledger for the chosen activity. */
   function apply(selected) {
     const filtered =
-      selected === 'all' ? xpTx : xpTx.filter((t) => activityName(t.path) === selected);
-
+      (selected === 'all' ? xpTx : xpTx.filter((t) => activityName(t.path) === selected));
     // XP amount for the current selection.
     const sum = filtered.reduce((s, t) => s + (Number(t.amount) || 0), 0);
     total.replaceChildren(
@@ -99,10 +97,11 @@ function buildLedger(transactions) {
   } else {
     for (const t of recent) {
       const tr = el('tr');
+      let name = t.path.split('/').filter(Boolean).at(-1) || '—'
       tr.append(
         el('td', { class: 'ledger__amount', text: '+' + formatXp(Number(t.amount) || 0) }),
         el('td', { class: 'ledger__date', text: formatDay(new Date(t.createdAt)) }),
-        el('td', { class: 'ledger__path', text: t.path || '—', title: t.path || '' })
+        el('td', { class: 'ledger__name', text: name, title: name })
       );
       tbody.append(tr);
     }
