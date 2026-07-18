@@ -38,6 +38,7 @@
   --success: #4ade80;
   --danger: #f87171;
   --progress: #94a3b8;
+  --warn: #fbbf24;
   --error: #ffb4ab;
 
   /* --- Chart tokens --- */
@@ -515,18 +516,17 @@ body {
   display: grid;
   grid-template-columns: 1.5fr 1fr;
   gap: 16px;
-  align-items: start;
+  /* stretch so the graph and the list share one row height */
+  align-items: stretch;
 }
-.xp__chart {
+/* Each column is "label + box"; matching labels make both boxes start at the
+   same top edge, and the box below flexes to fill the shared height. */
+.xp__col {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
-  background: var(--panel-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 12px;
 }
-
-/* Recent activity ledger */
-.ledger__title {
+.xp__col-title {
   margin: 0 0 10px;
   font-family: var(--font-mono);
   font-size: 12px;
@@ -535,8 +535,30 @@ body {
   text-transform: uppercase;
   color: var(--text-faint);
 }
+.xp__chart {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  align-content: center;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+}
+.xp__ledger {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Recent activity ledger — the fixed 300px base keeps the row height stable
+   (no shift when filtering changes the row count). */
 .ledger__scroll {
   height: 300px;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -609,6 +631,19 @@ body {
   color: var(--primary);
   text-shadow: 0 0 18px rgba(107, 251, 154, 0.35);
 }
+/* Ratio health — under 0.9 red · 0.9–1.1 yellow · over 1.1 green */
+.audit__ratio-value.is-good {
+  color: var(--success);
+  text-shadow: 0 0 18px rgba(74, 222, 128, 0.35);
+}
+.audit__ratio-value.is-warn {
+  color: var(--warn);
+  text-shadow: 0 0 18px rgba(251, 191, 36, 0.35);
+}
+.audit__ratio-value.is-bad {
+  color: var(--danger);
+  text-shadow: 0 0 18px rgba(248, 113, 113, 0.35);
+}
 .audit__ratio-label {
   color: var(--text-muted);
   font-size: 13px;
@@ -659,10 +694,20 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
-  align-items: start;
+  /* stretch = both panels match the tallest in the row */
+  align-items: stretch;
 }
 .grid-2 > .panel {
   margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+}
+/* The scroll list / chart absorbs the leftover space, so the shorter panel
+   fills its height instead of leaving a gap under its content. */
+.grid-2 > .projects .projects__scroll,
+.grid-2 > .audit .audit__chart {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 /* =========================================================================

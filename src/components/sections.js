@@ -94,7 +94,10 @@ export function renderAuditPanel(data) {
 
   panel.append(
     el('div', { class: 'audit__ratio' }, [
-      el('span', { class: 'audit__ratio-value', text: formatRatio(data.auditRatio) }),
+      el('span', {
+        class: `audit__ratio-value ${ratioClass(data.auditRatio)}`,
+        text: formatRatio(data.auditRatio),
+      }),
       el('span', { class: 'audit__ratio-label', text: 'audit ratio (up ÷ down)' }),
     ])
   );
@@ -110,6 +113,17 @@ export function renderAuditPanel(data) {
 
   panel.append(el('div', { class: 'audit__chart' }, [buildAuditChart({ up: data.auditUp, down: data.auditDown })]));
   return panel;
+}
+
+/**
+ * Ratio health colour: red below 0.9, green above 1.1, yellow in between.
+ * A non-finite ratio (no audits received) counts as good.
+ */
+function ratioClass(ratio) {
+  if (!Number.isFinite(ratio)) return 'is-good';
+  if (ratio < 0.9) return 'is-bad';
+  if (ratio > 1.1) return 'is-good';
+  return 'is-warn';
 }
 
 function auditRow(label, value) {

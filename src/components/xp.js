@@ -37,11 +37,21 @@ export function renderXpSection(data) {
   const total = el('div', { class: 'xp__total' });
   panel.append(total);
 
-  // --- Body: chart + ledger ---
+  // --- Body: chart + ledger, each a labelled column so the two boxes start
+  //     at the same top edge and share the row height. ---
   const body = el('div', { class: 'xp__body' });
+
+  const chartCol = el('div', { class: 'xp__col' });
+  chartCol.append(el('h3', { class: 'xp__col-title', text: 'Cumulative XP' }));
   const chartWrap = el('div', { class: 'xp__chart' });
+  chartCol.append(chartWrap);
+
+  const ledgerCol = el('div', { class: 'xp__col' });
+  ledgerCol.append(el('h3', { class: 'xp__col-title', text: 'Recent activity' }));
   const ledgerWrap = el('div', { class: 'xp__ledger' });
-  body.append(chartWrap, ledgerWrap);
+  ledgerCol.append(ledgerWrap);
+
+  body.append(chartCol, ledgerCol);
   panel.append(body);
 
   /** Recompute the XP figure + chart + ledger for the chosen activity. */
@@ -77,9 +87,6 @@ function buildLedger(transactions) {
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     .slice(0, 10);
 
-  const wrap = el('div', { class: 'ledger' });
-  wrap.append(el('h3', { class: 'ledger__title', text: 'Recent activity' }));
-
   const scroll = el('div', { class: 'ledger__scroll' });
   const table = el('table', { class: 'ledger__table' });
 
@@ -108,6 +115,5 @@ function buildLedger(transactions) {
   }
   table.append(tbody);
   scroll.append(table);
-  wrap.append(scroll);
-  return wrap;
+  return scroll;
 }
